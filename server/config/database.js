@@ -2,11 +2,29 @@ import sqlite3 from 'sqlite3';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import bcrypt from 'bcryptjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const dbPath = path.resolve(__dirname, '../villagemart.db');
+// On Vercel serverless environment, filesystem is read-only except /tmp
+const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true' || Boolean(process.env.VERCEL);
+let dbPath = path.resolve(__dirname, '../villagemart.db');
+
+if (isVercel) {
+  const tmpDbPath = '/tmp/villagemart.db';
+  if (!fs.existsSync(tmpDbPath)) {
+    if (fs.existsSync(dbPath)) {
+      try {
+        fs.copyFileSync(dbPath, tmpDbPath);
+        console.log('Copied existing SQLite db to /tmp/villagemart.db');
+      } catch (err) {
+        console.error('Failed to copy db to /tmp:', err);
+      }
+    }
+  }
+  dbPath = tmpDbPath;
+}
 
 // Ensure database directory exists
 const dbDir = path.dirname(dbPath);
@@ -240,8 +258,59 @@ export const initDB = async () => {
     `);
 
     console.log('Database tables initialized successfully.');
+
+    // Auto-seed default accounts if empty
+    await autoSeedIfEmpty();
   } catch (error) {
     console.error('Failed to initialize database tables:', error);
+  }
+};
+
+const autoSeedIfEmpty = async () => {
+  try {
+    const userCount = await get('SELECT COUNT(*) as count FROM users');
+    if (!userCount || userCount.count === 0) {
+      console.log('Seeding initial demo accounts and categories...');
+      const adminHash = await bcrypt.hash('admin123', 10);
+      const farmerHash = await bcrypt.hash('farmer123', 10);
+      const customerHash = await bcrypt.hash('customer123', 10);
+
+      const adminRes = await run(
+        `INSERT INTO users (name, email, phone, password_hash, role) VALUES (?, ?, ?, ?, 'admin')`,
+        ['Village Mart Admin', 'admin@villagemart.com', '+91 98765 00000', adminHash]
+      );
+
+      const farmerRes = await run(
+        `INSERT INTO users (name, email, phone, password_hash, role) VALUES (?, ?, ?, ?, 'farmer')`,
+        ['Ravi Kumar', 'farmer@villagemart.com', '+91 98480 12345', farmerHash]
+      );
+
+      const customerRes = await run(
+        `INSERT INTO users (name, email, phone, password_hash, role) VALUES (?, ?, ?, ?, 'customer')`,
+        ['Rahul Sharma', 'customer@villagemart.com', '+91 98765 43210', customerHash]
+      );
+
+      await run(`
+        INSERT INTO farmer_profiles (user_id, farm_name, location, description, farming_experience, farming_method, verification_status, rating)
+        VALUES (?, 'Green Valley Farms', 'Warangal, Telangana', 'Generational farm cultivating fresh organic vegetables.', '15 Years', 'Organic & Natural Farming', 'approved', 4.9)
+      `, [farmerRes.lastID]);
+
+      await run(`INSERT INTO carts (user_id) VALUES (?)`, [customerRes.lastID]);
+
+      const categoriesData = [
+        { name: 'Vegetables', slug: 'vegetables', description: 'Farm-fresh, crisp vegetables harvested daily', image: 'https://images.unsplash.com/photo-1566385101042-1a0aa0c1268c?w=600&auto=format&fit=crop&q=80' },
+        { name: 'Fruits', slug: 'fruits', description: 'Naturally ripened, sweet, juicy seasonal fruits', image: 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=600&auto=format&fit=crop&q=80' },
+        { name: 'Grains', slug: 'grains', description: 'Unpolished grains, premium traditional rice & wheat', image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=600&auto=format&fit=crop&q=80' },
+        { name: 'Pulses', slug: 'pulses', description: 'Protein-rich lentils, chickpeas, and beans', image: 'https://images.unsplash.com/photo-1515543237350-b3eea1ec8082?w=600&auto=format&fit=crop&q=80' }
+      ];
+
+      for (const c of categoriesData) {
+        await run(`INSERT OR IGNORE INTO categories (name, slug, description, image) VALUES (?, ?, ?, ?)`, [c.name, c.slug, c.description, c.image]);
+      }
+      console.log('Auto-seeding complete.');
+    }
+  } catch (err) {
+    console.error('Auto seed failed:', err.message);
   }
 };
 

@@ -18,11 +18,13 @@ export const LoginPage = () => {
     setSubmitting(true);
     try {
       const res = await login(email, password);
-      if (res.success) {
-        addToast(`Welcome back, ${res.user.name}!`, 'success');
+      if (res.success && res.user) {
+        addToast(`Welcome back, ${res.user.name || 'User'}!`, 'success');
         if (res.user.role === 'admin') navigate('/admin');
         else if (res.user.role === 'farmer') navigate('/farmer');
         else navigate('/customer');
+      } else {
+        addToast(res.message || 'Login failed. Please check your credentials.', 'error');
       }
     } catch (err) {
       addToast(err.message || 'Login failed. Invalid credentials.', 'error');

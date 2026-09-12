@@ -46,6 +46,8 @@ export const RegisterPage = () => {
         if (res.success) {
           addToast('Customer account created successfully!', 'success');
           navigate('/customer');
+        } else {
+          addToast(res.message || 'Customer registration failed.', 'error');
         }
       } else {
         const res = await registerFarmer({
@@ -61,6 +63,8 @@ export const RegisterPage = () => {
         if (res.success) {
           addToast('Farmer registration submitted! Pending admin verification.', 'info');
           navigate('/farmer');
+        } else {
+          addToast(res.message || 'Farmer registration failed.', 'error');
         }
       }
     } catch (err) {

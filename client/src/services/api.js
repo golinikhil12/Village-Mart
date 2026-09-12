@@ -32,9 +32,12 @@ export const api = {
       });
       const data = await safeParseJson(res);
       if (!res.ok) {
-        return { success: false, message: data?.message || 'API request failed' };
+        return { success: false, message: data?.message || `Server returned error ${res.status}` };
       }
-      return data || { success: true };
+      if (data === null) {
+        return { success: false, message: 'Received non-JSON response from server.' };
+      }
+      return data.success !== undefined ? data : { success: true, data };
     } catch (err) {
       console.warn(`API GET ${endpoint} failed:`, err.message);
       return { success: false, message: err.message };
@@ -50,9 +53,12 @@ export const api = {
       });
       const data = await safeParseJson(res);
       if (!res.ok) {
-        return { success: false, message: data?.message || 'API request failed' };
+        return { success: false, message: data?.message || `Server returned error ${res.status}` };
       }
-      return data || { success: true };
+      if (data === null) {
+        return { success: false, message: 'Received non-JSON response from server.' };
+      }
+      return data.success !== undefined ? data : { success: true, data };
     } catch (err) {
       console.warn(`API POST ${endpoint} failed:`, err.message);
       return { success: false, message: err.message };
@@ -68,9 +74,12 @@ export const api = {
       });
       const data = await safeParseJson(res);
       if (!res.ok) {
-        return { success: false, message: data?.message || 'API request failed' };
+        return { success: false, message: data?.message || `Server returned error ${res.status}` };
       }
-      return data || { success: true };
+      if (data === null) {
+        return { success: false, message: 'Received non-JSON response from server.' };
+      }
+      return data.success !== undefined ? data : { success: true, data };
     } catch (err) {
       console.warn(`API PUT ${endpoint} failed:`, err.message);
       return { success: false, message: err.message };
@@ -85,9 +94,12 @@ export const api = {
       });
       const data = await safeParseJson(res);
       if (!res.ok) {
-        return { success: false, message: data?.message || 'API request failed' };
+        return { success: false, message: data?.message || `Server returned error ${res.status}` };
       }
-      return data || { success: true };
+      if (data === null) {
+        return { success: false, message: 'Received non-JSON response from server.' };
+      }
+      return data.success !== undefined ? data : { success: true, data };
     } catch (err) {
       console.warn(`API DELETE ${endpoint} failed:`, err.message);
       return { success: false, message: err.message };
