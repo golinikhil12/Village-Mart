@@ -185,7 +185,7 @@ export const ProductDetailsPage = () => {
   const avgRating = parseFloat(product.avg_rating || 5.0).toFixed(1);
 
   const handleBuyNow = async () => {
-    const success = await addToCart(product.id, quantity);
+    const success = await addToCart(product.id, quantity, product);
     if (success) {
       navigate('/checkout');
     }
@@ -343,7 +343,7 @@ export const ProductDetailsPage = () => {
               {/* Buttons */}
               <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                 <button
-                  onClick={() => addToCart(product.id, quantity)}
+                  onClick={() => addToCart(product.id, quantity, product)}
                   disabled={product.quantity <= 0}
                   className="btn btn-primary btn-lg"
                   style={{ flex: 1 }}

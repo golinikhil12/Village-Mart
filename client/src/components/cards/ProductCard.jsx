@@ -131,7 +131,7 @@ export const ProductCard = ({ product }) => {
               Details
             </Link>
             <button
-              onClick={() => addToCart(product.id, 1)}
+              onClick={() => addToCart(product.id, 1, product)}
               disabled={product.quantity <= 0}
               className="btn btn-primary btn-sm"
               title="Add to Cart"
