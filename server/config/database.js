@@ -296,80 +296,131 @@ const autoSeedIfEmpty = async () => {
       `, [farmerRes.lastID]);
 
       await run(`INSERT INTO carts (user_id) VALUES (?)`, [customerRes.lastID]);
+    }
 
-      const categoriesData = [
-        { name: 'Vegetables', slug: 'vegetables', description: 'Farm-fresh, crisp vegetables harvested daily', image: 'https://images.unsplash.com/photo-1566385101042-1a0aa0c1268c?w=600&auto=format&fit=crop&q=80' },
-        { name: 'Fruits', slug: 'fruits', description: 'Naturally ripened, sweet, juicy seasonal fruits', image: 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=600&auto=format&fit=crop&q=80' },
-        { name: 'Grains', slug: 'grains', description: 'Unpolished grains, premium traditional rice & wheat', image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=600&auto=format&fit=crop&q=80' },
-        { name: 'Pulses', slug: 'pulses', description: 'Protein-rich lentils, chickpeas, and beans', image: 'https://images.unsplash.com/photo-1515543237350-b3eea1ec8082?w=600&auto=format&fit=crop&q=80' }
+    // Always ensure categories exist
+    const categoriesData = [
+      { name: 'Vegetables', slug: 'vegetables', description: 'Farm-fresh, crisp vegetables harvested daily', image: 'https://images.unsplash.com/photo-1566385101042-1a0aa0c1268c?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Fruits', slug: 'fruits', description: 'Naturally ripened, sweet, juicy seasonal fruits', image: 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Grains', slug: 'grains', description: 'Unpolished grains, premium traditional rice & wheat', image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Pulses', slug: 'pulses', description: 'Protein-rich lentils, chickpeas, and beans', image: 'https://images.unsplash.com/photo-1515543237350-b3eea1ec8082?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Dairy', slug: 'dairy', description: 'A2 Aspiration farm milk, pure A2 ghee, and fresh paneer', image: 'https://images.unsplash.com/photo-1528750997573-59b89d66f4f7?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Spices', slug: 'spices', description: 'Aromatic, pure, unadulterated spices & herbs', image: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Leafy Greens', slug: 'leafy-greens', description: 'Hydroponic & organic nutrient-dense greens', image: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Organic Products', slug: 'organic-products', description: '100% Certified organic agricultural produce', image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=600&auto=format&fit=crop&q=80' }
+    ];
+
+    const catIdMap = {};
+    for (const c of categoriesData) {
+      await run(`INSERT OR IGNORE INTO categories (name, slug, description, image) VALUES (?, ?, ?, ?)`, [c.name, c.slug, c.description, c.image]);
+      const existingCat = await get('SELECT id FROM categories WHERE slug = ?', [c.slug]);
+      if (existingCat) catIdMap[c.slug] = existingCat.id;
+    }
+
+    // Always check if products table is empty (runs independently of userCount)
+    const prodCount = await get('SELECT COUNT(*) as count FROM products');
+    if (!prodCount || prodCount.count === 0) {
+      console.log('Products table empty. Auto-seeding produce items...');
+      const farmerUser = await get("SELECT id FROM users WHERE role = 'farmer' LIMIT 1");
+      const farmerId = farmerUser ? farmerUser.id : 2;
+
+      const defaultProducts = [
+        {
+          farmer_id: farmerId,
+          category_id: catIdMap['vegetables'] || 1,
+          name: 'Farm Fresh Organic Tomatoes',
+          description: 'Vine-ripened red tomatoes grown organically in Warangal. Sweet, juicy, and perfect for salads, curries, and gravies.',
+          price: 40,
+          unit: 'kg',
+          quantity: 150,
+          harvest_date: '2026-09-07',
+          farming_method: '100% Organic compost nurtured',
+          organic: 1,
+          location: 'Warangal, Telangana',
+          image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=800&auto=format&fit=crop&q=80'
+        },
+        {
+          farmer_id: farmerId,
+          category_id: catIdMap['vegetables'] || 1,
+          name: 'Nashik Red Onions',
+          description: 'High-quality crunchy Nashik red onions with long shelf life. Rich flavor and intense aroma.',
+          price: 35,
+          unit: 'kg',
+          quantity: 300,
+          harvest_date: '2026-09-05',
+          farming_method: 'Soil-drip drip irrigation',
+          organic: 0,
+          location: 'Nashik, Maharashtra',
+          image: 'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cf?w=800&auto=format&fit=crop&q=80'
+        },
+        {
+          farmer_id: farmerId,
+          category_id: catIdMap['fruits'] || 2,
+          name: 'Fresh Robusta Bananas',
+          description: 'Naturally grown nutrient-packed sweet Robusta bananas.',
+          price: 60,
+          unit: 'dozen',
+          quantity: 120,
+          harvest_date: '2026-09-07',
+          farming_method: 'Natural Mulching',
+          organic: 1,
+          location: 'Warangal, Telangana',
+          image: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=800&auto=format&fit=crop&q=80'
+        },
+        {
+          farmer_id: farmerId,
+          category_id: catIdMap['grains'] || 3,
+          name: 'Pure Sona Masoori Unpolished Rice',
+          description: 'Aromatic, low glycemic index Sona Masoori raw rice unpolished to retain natural vitamins.',
+          price: 75,
+          unit: 'kg',
+          quantity: 500,
+          harvest_date: '2026-08-20',
+          farming_method: 'Natural Zero Budget Farming',
+          organic: 1,
+          location: 'Warangal, Telangana',
+          image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=800&auto=format&fit=crop&q=80'
+        },
+        {
+          farmer_id: farmerId,
+          category_id: catIdMap['spices'] || 6,
+          name: 'Organic Salem Turmeric Powder',
+          description: 'High-curcumin pure turmeric powder cultivated without chemical additives.',
+          price: 180,
+          unit: '500g',
+          quantity: 100,
+          harvest_date: '2026-08-10',
+          farming_method: 'Organic & Sun Dried',
+          organic: 1,
+          location: 'Guntur, Andhra Pradesh',
+          image: 'https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=800&auto=format&fit=crop&q=80'
+        },
+        {
+          farmer_id: farmerId,
+          category_id: catIdMap['leafy-greens'] || 7,
+          name: 'Fresh Organic Baby Spinach (Palak)',
+          description: 'Tender, crisp, iron-packed organic spinach bundle harvested early in the morning.',
+          price: 25,
+          unit: 'bunch',
+          quantity: 40,
+          harvest_date: '2026-09-09',
+          farming_method: 'Hydroponic / Clean Soil',
+          organic: 1,
+          location: 'Warangal, Telangana',
+          image: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=800&auto=format&fit=crop&q=80'
+        }
       ];
 
-      const catIdMap = {};
-      for (const c of categoriesData) {
-        const catRes = await run(`INSERT OR IGNORE INTO categories (name, slug, description, image) VALUES (?, ?, ?, ?)`, [c.name, c.slug, c.description, c.image]);
-        const existingCat = await get('SELECT id FROM categories WHERE slug = ?', [c.slug]);
-        if (existingCat) catIdMap[c.slug] = existingCat.id;
+      for (const p of defaultProducts) {
+        const res = await run(`
+          INSERT INTO products (farmer_id, category_id, name, description, price, unit, quantity, harvest_date, farming_method, organic, location, status)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'published')
+        `, [p.farmer_id, p.category_id, p.name, p.description, p.price, p.unit, p.quantity, p.harvest_date, p.farming_method, p.organic, p.location]);
+        await run(`INSERT INTO product_images (product_id, image_url, is_primary) VALUES (?, ?, 1)`, [res.lastID, p.image]);
       }
-
-      // Seed initial products if products table is empty
-      const prodCount = await get('SELECT COUNT(*) as count FROM products');
-      if (!prodCount || prodCount.count === 0) {
-        const defaultProducts = [
-          {
-            farmer_id: farmerRes.lastID,
-            category_id: catIdMap['vegetables'] || 1,
-            name: 'Farm Fresh Organic Tomatoes',
-            description: 'Vine-ripened red tomatoes grown organically in Warangal. Sweet, juicy, and perfect for salads, curries, and gravies.',
-            price: 40,
-            unit: 'kg',
-            quantity: 150,
-            harvest_date: '2026-09-07',
-            farming_method: '100% Organic compost nurtured',
-            organic: 1,
-            location: 'Warangal, Telangana',
-            image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=800&auto=format&fit=crop&q=80'
-          },
-          {
-            farmer_id: farmerRes.lastID,
-            category_id: catIdMap['fruits'] || 2,
-            name: 'Fresh Robusta Bananas',
-            description: 'Naturally grown nutrient-packed sweet Robusta bananas.',
-            price: 60,
-            unit: 'dozen',
-            quantity: 120,
-            harvest_date: '2026-09-07',
-            farming_method: 'Natural Mulching',
-            organic: 1,
-            location: 'Warangal, Telangana',
-            image: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=800&auto=format&fit=crop&q=80'
-          },
-          {
-            farmer_id: farmerRes.lastID,
-            category_id: catIdMap['grains'] || 3,
-            name: 'Pure Sona Masoori Unpolished Rice',
-            description: 'Aromatic, low glycemic index Sona Masoori raw rice unpolished to retain natural vitamins.',
-            price: 75,
-            unit: 'kg',
-            quantity: 500,
-            harvest_date: '2026-08-20',
-            farming_method: 'Natural Zero Budget Farming',
-            organic: 1,
-            location: 'Warangal, Telangana',
-            image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=800&auto=format&fit=crop&q=80'
-          }
-        ];
-
-        for (const p of defaultProducts) {
-          const res = await run(`
-            INSERT INTO products (farmer_id, category_id, name, description, price, unit, quantity, harvest_date, farming_method, organic, location, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'published')
-          `, [p.farmer_id, p.category_id, p.name, p.description, p.price, p.unit, p.quantity, p.harvest_date, p.farming_method, p.organic, p.location]);
-          await run(`INSERT INTO product_images (product_id, image_url, is_primary) VALUES (?, ?, 1)`, [res.lastID, p.image]);
-        }
-      }
-
-      console.log('Auto-seeding complete.');
     }
+
+    console.log('Auto-seeding check complete.');
   } catch (err) {
     console.error('Auto seed failed:', err.message);
   }
