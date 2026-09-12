@@ -29,25 +29,37 @@ export const ShopPage = () => {
     });
   }, []);
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (overrideParams = null) => {
     setLoading(true);
     try {
       const queryParams = new URLSearchParams();
-      if (search) queryParams.set('search', search);
-      if (selectedCategory) queryParams.set('category', selectedCategory);
-      if (minPrice) queryParams.set('minPrice', minPrice);
-      if (maxPrice) queryParams.set('maxPrice', maxPrice);
-      if (minRating) queryParams.set('minRating', minRating);
-      if (organicOnly) queryParams.set('organic', 'true');
-      if (sortBy) queryParams.set('sortBy', sortBy);
-      queryParams.set('page', page);
+      const currentSearch = overrideParams?.search !== undefined ? overrideParams.search : search;
+      const currentCategory = overrideParams?.category !== undefined ? overrideParams.category : selectedCategory;
+      const currentMinPrice = overrideParams?.minPrice !== undefined ? overrideParams.minPrice : minPrice;
+      const currentMaxPrice = overrideParams?.maxPrice !== undefined ? overrideParams.maxPrice : maxPrice;
+      const currentMinRating = overrideParams?.minRating !== undefined ? overrideParams.minRating : minRating;
+      const currentOrganic = overrideParams?.organic !== undefined ? overrideParams.organic : organicOnly;
+      const currentSortBy = overrideParams?.sortBy !== undefined ? overrideParams.sortBy : sortBy;
+      const currentPage = overrideParams?.page !== undefined ? overrideParams.page : page;
+
+      if (currentSearch) queryParams.set('search', currentSearch);
+      if (currentCategory) queryParams.set('category', currentCategory);
+      if (currentMinPrice) queryParams.set('minPrice', currentMinPrice);
+      if (currentMaxPrice) queryParams.set('maxPrice', currentMaxPrice);
+      if (currentMinRating) queryParams.set('minRating', currentMinRating);
+      if (currentOrganic) queryParams.set('organic', 'true');
+      if (currentSortBy) queryParams.set('sortBy', currentSortBy);
+      queryParams.set('page', currentPage);
 
       setSearchParams(queryParams);
 
       const res = await api.get(`/products?${queryParams.toString()}`);
-      if (res.success) {
+      if (res && res.success) {
         setProducts(res.products || []);
         setPagination(res.pagination || { page: 1, totalPages: 1, total: 0 });
+      } else {
+        setProducts([]);
+        setPagination({ page: 1, totalPages: 1, total: 0 });
       }
     } catch (err) {
       console.error('Error fetching shop products:', err);
@@ -63,7 +75,7 @@ export const ShopPage = () => {
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     setPage(1);
-    fetchProducts();
+    fetchProducts({ page: 1 });
   };
 
   const handleResetFilters = () => {
@@ -76,6 +88,16 @@ export const ShopPage = () => {
     setSortBy('newest');
     setPage(1);
     setSearchParams({});
+    fetchProducts({
+      search: '',
+      category: '',
+      minPrice: '',
+      maxPrice: '',
+      minRating: '',
+      organic: false,
+      sortBy: 'newest',
+      page: 1
+    });
   };
 
   return (

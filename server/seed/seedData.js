@@ -22,6 +22,11 @@ const seedDatabase = async () => {
     await run('DELETE FROM categories');
     await run('DELETE FROM farmer_profiles');
     await run('DELETE FROM users');
+    try {
+      await run('DELETE FROM sqlite_sequence');
+    } catch (e) {
+      // sqlite_sequence might not exist if no autoincrement yet
+    }
   }
 
   // 1. Password Hashes
@@ -270,6 +275,7 @@ const seedDatabase = async () => {
     }
   ];
 
+  const insertedProductIds = [];
   for (const p of productsData) {
     const res = await run(`
       INSERT INTO products (farmer_id, category_id, name, description, price, unit, quantity, harvest_date, farming_method, organic, location, status)
@@ -277,6 +283,7 @@ const seedDatabase = async () => {
     `, [p.farmer_id, p.category_id, p.name, p.description, p.price, p.unit, p.quantity, p.harvest_date, p.farming_method, p.organic, p.location]);
 
     const prodId = res.lastID;
+    insertedProductIds.push(prodId);
     for (let i = 0; i < p.images.length; i++) {
       await run(`INSERT INTO product_images (product_id, image_url, is_primary) VALUES (?, ?, ?)`, [prodId, p.images[i], i === 0 ? 1 : 0]);
     }
@@ -287,8 +294,8 @@ const seedDatabase = async () => {
   const cartId = cartRes.lastID;
 
   await run(`
-    INSERT INTO cart_items (cart_id, product_id, quantity) VALUES (?, 1, 2)
-  `, [cartId]);
+    INSERT INTO cart_items (cart_id, product_id, quantity) VALUES (?, ?, 2)
+  `, [cartId, insertedProductIds[0] || 1]);
 
   const addrRes = await run(`
     INSERT INTO addresses (user_id, full_name, phone, address_line, city, state, pincode, landmark, is_default)
@@ -303,28 +310,32 @@ const seedDatabase = async () => {
 
   await run(`
     INSERT INTO order_items (order_id, product_id, farmer_id, quantity, price)
-    VALUES (?, 1, ?, 2, 40)
-  `, [orderRes.lastID, f1Id]);
+    VALUES (?, ?, ?, 2, 40)
+  `, [orderRes.lastID, insertedProductIds[0] || 1, f1Id]);
 
   await run(`
     INSERT INTO order_items (order_id, product_id, farmer_id, quantity, price)
-    VALUES (?, 6, ?, 4, 75)
-  `, [orderRes.lastID, f2Id]);
+    VALUES (?, ?, ?, 4, 75)
+  `, [orderRes.lastID, insertedProductIds[5] || 6, f2Id]);
 
   // 8. Reviews
   await run(`
     INSERT INTO reviews (user_id, product_id, rating, comment)
-    VALUES (?, 1, 5, 'Exceptional fresh tomatoes! Juiciest tomatoes I have purchased in years. Directly from Ravi Farms!')
-  `, [customerId]);
+    VALUES (?, ?, 5, 'Exceptional fresh tomatoes! Juiciest tomatoes I have purchased in years. Directly from Ravi Farms!')
+  `, [customerId, insertedProductIds[0] || 1]);
 
   await run(`
     INSERT INTO reviews (user_id, product_id, rating, comment)
-    VALUES (?, 6, 5, 'Superb quality unpolished rice. Highly fragrant and authentic taste!')
-  `, [customerId]);
+    VALUES (?, ?, 5, 'Superb quality unpolished rice. Highly fragrant and authentic taste!')
+  `, [customerId, insertedProductIds[5] || 6]);
 
   // 9. Wishlist
-  await run(`INSERT INTO wishlist (user_id, product_id) VALUES (?, 4)`, [customerId]);
-  await run(`INSERT INTO wishlist (user_id, product_id) VALUES (?, 7)`, [customerId]);
+  if (insertedProductIds[3]) {
+    await run(`INSERT INTO wishlist (user_id, product_id) VALUES (?, ?)`, [customerId, insertedProductIds[3]]);
+  }
+  if (insertedProductIds[6]) {
+    await run(`INSERT INTO wishlist (user_id, product_id) VALUES (?, ?)`, [customerId, insertedProductIds[6]]);
+  }
 
   // 10. Notifications
   await run(`

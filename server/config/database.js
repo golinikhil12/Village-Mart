@@ -304,9 +304,70 @@ const autoSeedIfEmpty = async () => {
         { name: 'Pulses', slug: 'pulses', description: 'Protein-rich lentils, chickpeas, and beans', image: 'https://images.unsplash.com/photo-1515543237350-b3eea1ec8082?w=600&auto=format&fit=crop&q=80' }
       ];
 
+      const catIdMap = {};
       for (const c of categoriesData) {
-        await run(`INSERT OR IGNORE INTO categories (name, slug, description, image) VALUES (?, ?, ?, ?)`, [c.name, c.slug, c.description, c.image]);
+        const catRes = await run(`INSERT OR IGNORE INTO categories (name, slug, description, image) VALUES (?, ?, ?, ?)`, [c.name, c.slug, c.description, c.image]);
+        const existingCat = await get('SELECT id FROM categories WHERE slug = ?', [c.slug]);
+        if (existingCat) catIdMap[c.slug] = existingCat.id;
       }
+
+      // Seed initial products if products table is empty
+      const prodCount = await get('SELECT COUNT(*) as count FROM products');
+      if (!prodCount || prodCount.count === 0) {
+        const defaultProducts = [
+          {
+            farmer_id: farmerRes.lastID,
+            category_id: catIdMap['vegetables'] || 1,
+            name: 'Farm Fresh Organic Tomatoes',
+            description: 'Vine-ripened red tomatoes grown organically in Warangal. Sweet, juicy, and perfect for salads, curries, and gravies.',
+            price: 40,
+            unit: 'kg',
+            quantity: 150,
+            harvest_date: '2026-09-07',
+            farming_method: '100% Organic compost nurtured',
+            organic: 1,
+            location: 'Warangal, Telangana',
+            image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=800&auto=format&fit=crop&q=80'
+          },
+          {
+            farmer_id: farmerRes.lastID,
+            category_id: catIdMap['fruits'] || 2,
+            name: 'Fresh Robusta Bananas',
+            description: 'Naturally grown nutrient-packed sweet Robusta bananas.',
+            price: 60,
+            unit: 'dozen',
+            quantity: 120,
+            harvest_date: '2026-09-07',
+            farming_method: 'Natural Mulching',
+            organic: 1,
+            location: 'Warangal, Telangana',
+            image: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=800&auto=format&fit=crop&q=80'
+          },
+          {
+            farmer_id: farmerRes.lastID,
+            category_id: catIdMap['grains'] || 3,
+            name: 'Pure Sona Masoori Unpolished Rice',
+            description: 'Aromatic, low glycemic index Sona Masoori raw rice unpolished to retain natural vitamins.',
+            price: 75,
+            unit: 'kg',
+            quantity: 500,
+            harvest_date: '2026-08-20',
+            farming_method: 'Natural Zero Budget Farming',
+            organic: 1,
+            location: 'Warangal, Telangana',
+            image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=800&auto=format&fit=crop&q=80'
+          }
+        ];
+
+        for (const p of defaultProducts) {
+          const res = await run(`
+            INSERT INTO products (farmer_id, category_id, name, description, price, unit, quantity, harvest_date, farming_method, organic, location, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'published')
+          `, [p.farmer_id, p.category_id, p.name, p.description, p.price, p.unit, p.quantity, p.harvest_date, p.farming_method, p.organic, p.location]);
+          await run(`INSERT INTO product_images (product_id, image_url, is_primary) VALUES (?, ?, 1)`, [res.lastID, p.image]);
+        }
+      }
+
       console.log('Auto-seeding complete.');
     }
   } catch (err) {

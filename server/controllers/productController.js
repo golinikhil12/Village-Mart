@@ -88,6 +88,8 @@ export const getProducts = async (req, res) => {
       sql += ` AND p.organic = 1`;
     }
 
+    sql += ` GROUP BY p.id`;
+
     // HAVING for minRating if filter applied
     if (minRating) {
       sql += ` HAVING avg_rating >= ?`;
@@ -123,10 +125,10 @@ export const getProducts = async (req, res) => {
     const allMatching = await query(sql, params);
     const total = allMatching.length;
 
-    sql += ` LIMIT ? OFFSET ?`;
-    params.push(limitNum, offset);
+    const paginatedSql = sql + ` LIMIT ? OFFSET ?`;
+    const paginatedParams = [...params, limitNum, offset];
 
-    const products = await query(sql, params);
+    const products = await query(paginatedSql, paginatedParams);
 
     return res.json({
       success: true,
