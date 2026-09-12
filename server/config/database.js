@@ -13,14 +13,16 @@ let dbPath = path.resolve(__dirname, '../villagemart.db');
 
 if (isVercel) {
   const tmpDbPath = '/tmp/villagemart.db';
-  if (!fs.existsSync(tmpDbPath)) {
-    if (fs.existsSync(dbPath)) {
-      try {
+  if (fs.existsSync(dbPath)) {
+    try {
+      const dbStat = fs.statSync(dbPath);
+      const tmpStat = fs.existsSync(tmpDbPath) ? fs.statSync(tmpDbPath) : null;
+      if (!tmpStat || dbStat.mtimeMs > tmpStat.mtimeMs) {
         fs.copyFileSync(dbPath, tmpDbPath);
-        console.log('Copied existing SQLite db to /tmp/villagemart.db');
-      } catch (err) {
-        console.error('Failed to copy db to /tmp:', err);
+        console.log('Copied bundled SQLite db to /tmp/villagemart.db');
       }
+    } catch (err) {
+      console.error('Failed to copy db to /tmp:', err);
     }
   }
   dbPath = tmpDbPath;
@@ -270,10 +272,10 @@ const autoSeedIfEmpty = async () => {
   try {
     const userCount = await get('SELECT COUNT(*) as count FROM users');
     if (!userCount || userCount.count === 0) {
-      console.log('Seeding initial demo accounts and categories...');
-      const adminHash = await bcrypt.hash('admin123', 10);
-      const farmerHash = await bcrypt.hash('farmer123', 10);
-      const customerHash = await bcrypt.hash('customer123', 10);
+      console.log('Seeding initial demo accounts...');
+      const adminHash = '$2a$10$Rtet8Yi3isHX10e4RE7u9ehy0rR9wS/.8L7ie10aAOZljlarvvolu';
+      const farmerHash = '$2a$10$1x3cuEb1/zmoigqycrrriOG831NcUNMKozl8kqdZmYV7/w68rEHT2';
+      const customerHash = '$2a$10$cpJNMYTX/AxipLEaOSEiUuJFb6QNLEOk99WTpDXWiTVYzvReIEwwW';
 
       const adminRes = await run(
         `INSERT INTO users (name, email, phone, password_hash, role) VALUES (?, ?, ?, ?, 'admin')`,
@@ -355,6 +357,34 @@ const autoSeedIfEmpty = async () => {
         },
         {
           farmer_id: farmerId,
+          category_id: catIdMap['vegetables'] || 1,
+          name: 'Farm Fresh Potatoes',
+          description: 'Clean, firm potatoes harvested directly from earthy Nashik soil. Great for roasting, frying, or boiling.',
+          price: 30,
+          unit: 'kg',
+          quantity: 200,
+          harvest_date: '2026-09-06',
+          farming_method: 'Traditional Crop Rotation',
+          organic: 0,
+          location: 'Nashik, Maharashtra',
+          image: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=800&auto=format&fit=crop&q=80'
+        },
+        {
+          farmer_id: farmerId,
+          category_id: catIdMap['fruits'] || 2,
+          name: 'Kolar Sweet Alphonso Mangoes',
+          description: 'Handpicked naturally ripened Alphonso mangoes. Heavenly fragrance and rich creamy pulp.',
+          price: 350,
+          unit: 'dozen',
+          quantity: 50,
+          harvest_date: '2026-09-08',
+          farming_method: 'Tree-ripened organic orchard',
+          organic: 1,
+          location: 'Kolar, Karnataka',
+          image: 'https://images.unsplash.com/photo-1553279768-865429fa0078?w=800&auto=format&fit=crop&q=80'
+        },
+        {
+          farmer_id: farmerId,
           category_id: catIdMap['fruits'] || 2,
           name: 'Fresh Robusta Bananas',
           description: 'Naturally grown nutrient-packed sweet Robusta bananas.',
@@ -384,6 +414,20 @@ const autoSeedIfEmpty = async () => {
         {
           farmer_id: farmerId,
           category_id: catIdMap['spices'] || 6,
+          name: 'Guntur Red Chilli Powder',
+          description: 'Authentic stone-ground fiery Guntur red chilli powder. Vibrant natural color with distinct pungency.',
+          price: 240,
+          unit: '500g',
+          quantity: 80,
+          harvest_date: '2026-08-15',
+          farming_method: 'Sun-dried traditional processing',
+          organic: 1,
+          location: 'Guntur, Andhra Pradesh',
+          image: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=800&auto=format&fit=crop&q=80'
+        },
+        {
+          farmer_id: farmerId,
+          category_id: catIdMap['spices'] || 6,
           name: 'Organic Salem Turmeric Powder',
           description: 'High-curcumin pure turmeric powder cultivated without chemical additives.',
           price: 180,
@@ -408,6 +452,20 @@ const autoSeedIfEmpty = async () => {
           organic: 1,
           location: 'Warangal, Telangana',
           image: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=800&auto=format&fit=crop&q=80'
+        },
+        {
+          farmer_id: farmerId,
+          category_id: catIdMap['dairy'] || 5,
+          name: 'Pure Gir Cow A2 Bilona Ghee',
+          description: 'Traditional Vedic Bilona method curd-churned A2 ghee made from grass-fed Gir cows.',
+          price: 1450,
+          unit: 'liter',
+          quantity: 25,
+          harvest_date: '2026-09-01',
+          farming_method: 'Free-range Grass-fed Dairy',
+          organic: 1,
+          location: 'Warangal, Telangana',
+          image: 'https://images.unsplash.com/photo-1528750997573-59b89d66f4f7?w=800&auto=format&fit=crop&q=80'
         }
       ];
 
@@ -422,7 +480,7 @@ const autoSeedIfEmpty = async () => {
 
     console.log('Auto-seeding check complete.');
   } catch (err) {
-    console.error('Auto seed failed:', err.message);
+    console.error('Auto seed failed:', err);
   }
 };
 
