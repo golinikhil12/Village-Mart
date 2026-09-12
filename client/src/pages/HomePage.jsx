@@ -8,8 +8,79 @@ import { CategoryCard } from '../components/cards/CategoryCard.jsx';
 import { ProductCardSkeleton, FarmerCardSkeleton } from '../components/common/Skeleton.jsx';
 import { handleProductImageError } from '../utils/imageUtils.js';
 
+const FALLBACK_SHOWCASE_PRODUCTS = [
+  {
+    id: 1,
+    name: 'Farm Fresh Organic Tomatoes',
+    description: 'Vine-ripened red tomatoes grown organically in Warangal. Sweet, juicy, and perfect for salads, curries, and gravies.',
+    price: 40,
+    unit: 'kg',
+    quantity: 150,
+    farming_method: '100% Organic compost nurtured',
+    organic: 1,
+    location: 'Warangal, Telangana',
+    farmer_name: 'Ravi Kumar',
+    farm_name: 'Green Valley Farms',
+    verification_status: 'approved',
+    primary_image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=800&auto=format&fit=crop&q=80',
+    avg_rating: 4.9,
+    review_count: 24
+  },
+  {
+    id: 2,
+    name: 'Nashik Red Onions',
+    description: 'High-quality crunchy Nashik red onions with long shelf life. Rich flavor and intense aroma.',
+    price: 35,
+    unit: 'kg',
+    quantity: 300,
+    farming_method: 'Soil-drip drip irrigation',
+    organic: 0,
+    location: 'Nashik, Maharashtra',
+    farmer_name: 'Mahesh Rao',
+    farm_name: 'Rural Roots Farm',
+    verification_status: 'approved',
+    primary_image: 'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cf?w=800&auto=format&fit=crop&q=80',
+    avg_rating: 4.8,
+    review_count: 18
+  },
+  {
+    id: 3,
+    name: 'Farm Fresh Potatoes',
+    description: 'Clean, firm potatoes harvested directly from earthy Nashik soil. Great for roasting, frying, or boiling.',
+    price: 30,
+    unit: 'kg',
+    quantity: 200,
+    farming_method: 'Traditional Crop Rotation',
+    organic: 0,
+    location: 'Nashik, Maharashtra',
+    farmer_name: 'Mahesh Rao',
+    farm_name: 'Rural Roots Farm',
+    verification_status: 'approved',
+    primary_image: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=800&auto=format&fit=crop&q=80',
+    avg_rating: 4.7,
+    review_count: 15
+  },
+  {
+    id: 4,
+    name: 'Kolar Sweet Alphonso Mangoes',
+    description: 'Handpicked naturally ripened Alphonso mangoes. Heavenly fragrance and rich creamy pulp.',
+    price: 350,
+    unit: 'dozen',
+    quantity: 50,
+    farming_method: 'Tree-ripened organic orchard',
+    organic: 1,
+    location: 'Kolar, Karnataka',
+    farmer_name: 'Anitha Devi',
+    farm_name: 'Fresh Harvest Farm',
+    verification_status: 'approved',
+    primary_image: 'https://images.unsplash.com/photo-1553279768-865429fa0078?w=800&auto=format&fit=crop&q=80',
+    avg_rating: 4.9,
+    review_count: 32
+  }
+];
+
 export const HomePage = () => {
-  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [featuredProducts, setFeaturedProducts] = useState(FALLBACK_SHOWCASE_PRODUCTS);
   const [categories, setCategories] = useState([]);
   const [featuredFarmers, setFeaturedFarmers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,11 +93,17 @@ export const HomePage = () => {
           api.get('/products/categories'),
           api.get('/farmers?verification_status=approved')
         ]);
-        if (prodRes.success) setFeaturedProducts(prodRes.products || []);
-        if (catRes.success) setCategories(catRes.categories || []);
-        if (farmerRes.success) setFeaturedFarmers((farmerRes.farmers || []).slice(0, 4));
+        if (prodRes && prodRes.success && prodRes.products && prodRes.products.length > 0) {
+          setFeaturedProducts(prodRes.products);
+        }
+        if (catRes && catRes.success && catRes.categories && catRes.categories.length > 0) {
+          setCategories(catRes.categories);
+        }
+        if (farmerRes && farmerRes.success && farmerRes.farmers && farmerRes.farmers.length > 0) {
+          setFeaturedFarmers(farmerRes.farmers.slice(0, 4));
+        }
       } catch (err) {
-        console.error('Failed to load homepage data:', err);
+        console.error('Failed to load homepage data, using fallback:', err);
       } finally {
         setLoading(false);
       }

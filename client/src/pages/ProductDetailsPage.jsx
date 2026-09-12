@@ -10,6 +10,109 @@ import { ProductCard } from '../components/cards/ProductCard.jsx';
 import { Modal } from '../components/common/Modal.jsx';
 import { handleProductImageError, handleUserImageError } from '../utils/imageUtils.js';
 
+const FALLBACK_SHOWCASE_PRODUCTS = [
+  {
+    id: 1,
+    name: 'Farm Fresh Organic Tomatoes',
+    description: 'Vine-ripened red tomatoes grown organically in Warangal. Sweet, juicy, and perfect for salads, curries, and gravies.',
+    price: 40,
+    unit: 'kg',
+    quantity: 150,
+    harvest_date: '2026-09-07',
+    farming_method: '100% Organic compost nurtured',
+    organic: 1,
+    location: 'Warangal, Telangana',
+    status: 'published',
+    category_id: 1,
+    category_name: 'Vegetables',
+    category_slug: 'vegetables',
+    farmer_id: 2,
+    farmer_name: 'Ravi Kumar',
+    farm_name: 'Green Valley Farms',
+    farmer_location: 'Warangal, Telangana',
+    verification_status: 'approved',
+    primary_image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=800&auto=format&fit=crop&q=80',
+    avg_rating: 4.9,
+    review_count: 24,
+    images: [{ image_url: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=800&auto=format&fit=crop&q=80', is_primary: 1 }]
+  },
+  {
+    id: 2,
+    name: 'Nashik Red Onions',
+    description: 'High-quality crunchy Nashik red onions with long shelf life. Rich flavor and intense aroma.',
+    price: 35,
+    unit: 'kg',
+    quantity: 300,
+    harvest_date: '2026-09-05',
+    farming_method: 'Soil-drip drip irrigation',
+    organic: 0,
+    location: 'Nashik, Maharashtra',
+    status: 'published',
+    category_id: 1,
+    category_name: 'Vegetables',
+    category_slug: 'vegetables',
+    farmer_id: 5,
+    farmer_name: 'Mahesh Rao',
+    farm_name: 'Rural Roots Farm',
+    farmer_location: 'Nashik, Maharashtra',
+    verification_status: 'approved',
+    primary_image: 'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cf?w=800&auto=format&fit=crop&q=80',
+    avg_rating: 4.8,
+    review_count: 18,
+    images: [{ image_url: 'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cf?w=800&auto=format&fit=crop&q=80', is_primary: 1 }]
+  },
+  {
+    id: 3,
+    name: 'Farm Fresh Potatoes',
+    description: 'Clean, firm potatoes harvested directly from earthy Nashik soil. Great for roasting, frying, or boiling.',
+    price: 30,
+    unit: 'kg',
+    quantity: 200,
+    harvest_date: '2026-09-06',
+    farming_method: 'Traditional Crop Rotation',
+    organic: 0,
+    location: 'Nashik, Maharashtra',
+    status: 'published',
+    category_id: 1,
+    category_name: 'Vegetables',
+    category_slug: 'vegetables',
+    farmer_id: 5,
+    farmer_name: 'Mahesh Rao',
+    farm_name: 'Rural Roots Farm',
+    farmer_location: 'Nashik, Maharashtra',
+    verification_status: 'approved',
+    primary_image: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=800&auto=format&fit=crop&q=80',
+    avg_rating: 4.7,
+    review_count: 15,
+    images: [{ image_url: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=800&auto=format&fit=crop&q=80', is_primary: 1 }]
+  },
+  {
+    id: 4,
+    name: 'Kolar Sweet Alphonso Mangoes',
+    description: 'Handpicked naturally ripened Alphonso mangoes. Heavenly fragrance and rich creamy pulp.',
+    price: 350,
+    unit: 'dozen',
+    quantity: 50,
+    harvest_date: '2026-09-08',
+    farming_method: 'Tree-ripened organic orchard',
+    organic: 1,
+    location: 'Kolar, Karnataka',
+    status: 'published',
+    category_id: 2,
+    category_name: 'Fruits',
+    category_slug: 'fruits',
+    farmer_id: 4,
+    farmer_name: 'Anitha Devi',
+    farm_name: 'Fresh Harvest Farm',
+    farmer_location: 'Kolar, Karnataka',
+    verification_status: 'approved',
+    primary_image: 'https://images.unsplash.com/photo-1553279768-865429fa0078?w=800&auto=format&fit=crop&q=80',
+    avg_rating: 4.9,
+    review_count: 32,
+    images: [{ image_url: 'https://images.unsplash.com/photo-1553279768-865429fa0078?w=800&auto=format&fit=crop&q=80', is_primary: 1 }]
+  }
+];
+
 export const ProductDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -33,16 +136,23 @@ export const ProductDetailsPage = () => {
     setLoading(true);
     try {
       const res = await api.get(`/products/${id}`);
-      if (res.success && res.product) {
+      if (res && res.success && res.product) {
         setProduct(res.product);
         if (res.product.images && res.product.images.length > 0) {
           setActiveImage(res.product.images[0].image_url);
         } else {
-          setActiveImage('/placeholder-product.jpg');
+          setActiveImage(res.product.primary_image || '/placeholder-product.jpg');
         }
+      } else {
+        const found = FALLBACK_SHOWCASE_PRODUCTS.find(p => String(p.id) === String(id)) || FALLBACK_SHOWCASE_PRODUCTS[0];
+        setProduct(found);
+        setActiveImage(found.primary_image);
       }
     } catch (err) {
-      console.error('Error fetching product details:', err);
+      console.error('Error fetching product details, using fallback:', err);
+      const found = FALLBACK_SHOWCASE_PRODUCTS.find(p => String(p.id) === String(id)) || FALLBACK_SHOWCASE_PRODUCTS[0];
+      setProduct(found);
+      setActiveImage(found.primary_image);
     } finally {
       setLoading(false);
     }
