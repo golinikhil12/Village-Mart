@@ -65,17 +65,21 @@ export const CartProvider = ({ children }) => {
   }, [user]);
 
   const addToCart = async (productId, quantity = 1, productData = null) => {
-    try {
-      if (user) {
+    if (user) {
+      try {
         const res = await api.post('/cart/add', { product_id: productId, quantity });
         if (res && res.success) {
           addToast('Product added to cart!', 'success');
-          fetchCart();
+          void fetchCart();
           return true;
         }
+      } catch (err) {
+        console.error('Could not add to the server cart; saving to the local basket instead:', err);
       }
+    }
 
-      // Guest mode or fallback if server API fails / not logged in
+    try {
+      // Guest mode and offline fallback.
       const currentItems = [...(cart.items || [])];
       const existingIdx = currentItems.findIndex(
         (item) => String(item.product_id || item.id) === String(productId)
@@ -108,8 +112,8 @@ export const CartProvider = ({ children }) => {
       return true;
     } catch (err) {
       console.error('Error in addToCart:', err);
-      addToast('Product added to cart!', 'success');
-      return true;
+      addToast('Could not add product to your basket.', 'error');
+      return false;
     }
   };
 

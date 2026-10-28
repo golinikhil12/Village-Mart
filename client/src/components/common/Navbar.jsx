@@ -73,6 +73,27 @@ export const Navbar = () => {
               <span>Contact</span>
             </Link>
           </li>
+          <li>
+            <Link
+              to="/virtual-store"
+              className={`nav-link ${location.pathname === '/virtual-store' ? 'active' : ''}`}
+              onClick={() => setMobileOpen(false)}
+              style={{
+                background: 'linear-gradient(135deg, #1a5c2a, #2e7d32)',
+                color: '#fff !important',
+                padding: '0.35rem 0.9rem',
+                borderRadius: '999px',
+                fontWeight: 700,
+                fontSize: '0.85rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.35rem'
+              }}
+            >
+              <span style={{ fontSize: '1rem' }}>🏪</span>
+              <span style={{ color: '#fff' }}>3D Store</span>
+            </Link>
+          </li>
         </ul>
 
         {/* Right Icon Actions */}

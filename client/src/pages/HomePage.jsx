@@ -151,8 +151,14 @@ export const HomePage = () => {
               <Link to="/shop" className="btn btn-accent btn-lg">
                 <ShoppingBag size={20} /> Shop Fresh Products
               </Link>
-              <Link to="/register?role=farmer" className="btn btn-secondary btn-lg">
-                Become a Farmer Seller <ArrowRight size={20} />
+              <Link to="/virtual-store" className="btn btn-lg" style={{
+                background: 'rgba(255,255,255,0.15)',
+                backdropFilter: 'blur(8px)',
+                color: '#fff',
+                border: '1px solid rgba(255,255,255,0.3)',
+                display: 'flex', alignItems: 'center', gap: '0.5rem'
+              }}>
+                🏪 Enter 3D Virtual Store
               </Link>
             </div>
 
@@ -232,6 +238,72 @@ export const HomePage = () => {
               <h4 style={{ fontSize: '1.1rem', marginBottom: '0.2rem' }}>Reliable Delivery</h4>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Direct logistics from farm to kitchen</p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 3D VIRTUAL STORE PROMO BANNER */}
+      <section style={{
+        padding: '4rem 0',
+        background: 'linear-gradient(135deg, #0f2d13 0%, #1a5c2a 50%, #2e7d32 100%)',
+        position: 'relative', overflow: 'hidden'
+      }}>
+        <div style={{
+          position: 'absolute', top: '-20%', right: '-5%',
+          width: 400, height: 400, borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(76,175,80,0.15) 0%, transparent 70%)'
+        }} />
+        <div style={{
+          position: 'absolute', bottom: '-10%', left: '-5%',
+          width: 300, height: 300, borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(165,214,167,0.1) 0%, transparent 70%)'
+        }} />
+        <div className="container" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '3rem', alignItems: 'center', position: 'relative', zIndex: 1 }}>
+          <div>
+            <span style={{ color: '#a5d6a7', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.85rem' }}>
+              ✨ NEW EXPERIENCE
+            </span>
+            <h2 style={{ fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', color: '#ffffff', marginTop: '0.5rem', lineHeight: 1.2 }}>
+              Shop in Our <br /><span style={{ color: '#81c784' }}>3D Virtual Supermarket</span>
+            </h2>
+            <p style={{ color: '#c8e6c9', fontSize: '1rem', lineHeight: 1.7, margin: '1rem 0 2rem' }}>
+              Walk through a realistic 3D supermarket, explore aisles, pick products from shelves, and add them to your basket — all from your browser!
+            </p>
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
+              {['🕹️ Game-style controls', '🛒 Real products & prices', '📱 Mobile friendly', '⚡ Optimized for all devices'].map(f => (
+                <span key={f} style={{
+                  background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)',
+                  borderRadius: 999, padding: '0.3rem 0.8rem', fontSize: '0.8rem', color: '#e8f5e9'
+                }}>{f}</span>
+              ))}
+            </div>
+            <Link to="/virtual-store" style={{
+              display: 'inline-flex', alignItems: 'center', gap: '0.6rem',
+              background: 'linear-gradient(135deg, #4caf50, #2e7d32)',
+              color: 'white', padding: '0.9rem 2rem', borderRadius: 999,
+              fontWeight: 800, fontSize: '1.05rem', textDecoration: 'none',
+              boxShadow: '0 8px 32px rgba(76,175,80,0.4)', letterSpacing: '0.03em'
+            }}>
+              🏪 Enter 3D Supermarket
+            </Link>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            {[
+              { icon: '🥦', label: 'Vegetables Aisle', desc: 'Farm-fresh produce' },
+              { icon: '🍎', label: 'Fruits Section', desc: 'Seasonal picks' },
+              { icon: '🥛', label: 'Dairy & Eggs', desc: 'A2 dairy products' },
+              { icon: '🌾', label: 'Grains & Pulses', desc: 'Unpolished grains' },
+            ].map(({ icon, label, desc }) => (
+              <div key={label} style={{
+                background: 'rgba(255,255,255,0.08)', borderRadius: 16,
+                padding: '1.25rem', border: '1px solid rgba(255,255,255,0.12)',
+                backdropFilter: 'blur(8px)'
+              }}>
+                <div style={{ fontSize: '2.2rem', marginBottom: '0.5rem' }}>{icon}</div>
+                <div style={{ color: '#ffffff', fontWeight: 700, fontSize: '0.9rem' }}>{label}</div>
+                <div style={{ color: '#a5d6a7', fontSize: '0.78rem' }}>{desc}</div>
+              </div>
+            ))}
           </div>
         </div>
       </section>

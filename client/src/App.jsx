@@ -28,6 +28,7 @@ import { CartPage } from './pages/customer/CartPage.jsx';
 import { CheckoutPage } from './pages/customer/CheckoutPage.jsx';
 import { NotFoundPage } from './pages/NotFoundPage.jsx';
 import { UnauthorizedPage } from './pages/UnauthorizedPage.jsx';
+import { VirtualStorePage } from './pages/VirtualStorePage.jsx';
 
 // Customer Pages
 import { CustomerDashboard } from './pages/customer/CustomerDashboard.jsx';
@@ -68,6 +69,9 @@ export default function App() {
             <NotificationProvider>
               <Router>
                 <Routes>
+                  {/* VIRTUAL STORE - Full screen, no layout */}
+                  <Route path="/virtual-store" element={<VirtualStorePage />} />
+
                   {/* PUBLIC ROUTES */}
                   <Route element={<PublicLayout />}>
                     <Route path="/" element={<HomePage />} />
